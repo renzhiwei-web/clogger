@@ -92,13 +92,12 @@ public:
             std::cout << format;
         }
         
-        std::cout << "\n";
-        std::cout.flush();
+        std::cout << std::endl;
         if (log_file == LogFile::LOGFILE && m_row_max > 0 && ++m_row >= m_row_max){
             rotate();
         }
     }
-    void open(const string & filename);
+    void set_logfile(const string & filename);
     void close();
     // 设置日志的等级，低于这个等级的日志将不会被显示
     void level(Level level);
@@ -113,6 +112,8 @@ private:
     void get_row();
     // 重定向标准输出到文件中
     void redirect();
+    // 打开日志文件
+    void open();
     template<typename... Args>
     void formt_str(std::string& content,const std::string& fmt,Args... args){
         int len_str = std::snprintf(nullptr,0,fmt.c_str(),args...);
@@ -138,7 +139,7 @@ private:
     // 设置日志等级
     Level m_level;
     // 每个日志文件最大存放长度
-    int m_row_max;
+    int m_row_max = 500;
     // 当前日志文件已经存放的长度
     int m_row;
     // 多线程下

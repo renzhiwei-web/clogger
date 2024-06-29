@@ -34,7 +34,7 @@ Logger * Logger::instance(){
     return m_instance;
 }
 
-void Logger::open(const string & filename){
+void Logger::set_logfile(const string & filename){
     m_filename = filename;
     log_file = LogFile::LOGFILE;
     get_row();
@@ -70,6 +70,16 @@ void Logger::redirect(){
     std::cout.rdbuf(m_fout.rdbuf());
     
 }
+
+void Logger::open(){
+    m_fout.open(m_filename,ios::app);
+    if (m_fout.fail()){
+        throw logic_error("open file failed" + m_filename);
+    }
+    m_row = 0;
+    redirect();
+}
+
 void Logger::close(){
     m_fout.close();
 }
@@ -137,6 +147,10 @@ void Logger::level(Level level){
 }
 
 void Logger::max(int row){
+    if (log_file != LogFile::LOGFILE) {
+        std::cerr << "can not set m_row_max value when in LogFile::COUT mode\n";
+        throw;
+    }
     m_row_max = row;
 }
 
@@ -154,5 +168,5 @@ void Logger::rotate(){
     if (rename(m_filename.c_str(),filename.c_str()) != 0){
         throw logic_error("rename log file failed:" + string(strerror(errno)));
     }
-    open(m_filename);
+    open();
 }

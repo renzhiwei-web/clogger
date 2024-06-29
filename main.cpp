@@ -17,7 +17,7 @@ void printlog(){
 }
 
 int main(){
-    loginfo->open("test.log");
+    loginfo->set_logfile("test.log"); // 设置日志文件，如果不设置则是标准输出
     Logger::instance() -> level(Logger::DEBUG);
     Logger::instance() -> max(90);
 
