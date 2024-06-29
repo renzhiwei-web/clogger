@@ -1,6 +1,7 @@
 #pragma once
 #ifndef LOGGER_H
 #define LOGGER_H
+#include <iostream>
 #include <string>
 #include <fstream>
 #include <ctime>
@@ -34,6 +35,10 @@ public:
         FATAL,
         LEVEL_COUNT
     };
+    enum class LogFile{
+        COUT,
+        LOGFILE
+    };
     static Logger * instance();
 
     // 日志等级，日志文件，程序行号，输出格式,输出的内容由可变参数接收
@@ -58,7 +63,7 @@ public:
         {
             return;
         }
-        if (m_fout.fail())
+        if (log_file == LogFile::LOGFILE && m_fout.fail())
         {
             throw logic_error("open file failed" + m_filename);
         }
@@ -73,25 +78,23 @@ public:
         std::string fmt = "%s %s %s:%d";
         std::string buffer;
         formt_str(buffer,fmt,timestamp,s_level[level],file,line);
-        m_fout << buffer;
+        std::cout << buffer;
 
-
-        m_fout << "\t";
+        std::cout << "\t";
 
         if (sizeof...(args) > 0)
         {
             buffer.clear();
             formt_str(buffer,format,args...);
-            m_fout << buffer;
+            std::cout << buffer;
         }
         else{
-            m_fout << format;
+            std::cout << format;
         }
         
-        m_fout << "\n";
-        m_row++;
-        m_fout.flush();
-        if (m_row_max > 0 && m_row >= m_row_max){
+        std::cout << "\n";
+        std::cout.flush();
+        if (log_file == LogFile::LOGFILE && m_row_max > 0 && ++m_row >= m_row_max){
             rotate();
         }
     }
@@ -104,9 +107,12 @@ public:
 private:
     Logger();
     ~Logger();
+    // 日志文件已满，将已有的日志文件备份，创建新的日志文件
     void rotate();
+    // 读取日志文件存在多少行
     void get_row();
-
+    // 重定向标准输出到文件中
+    void redirect();
     template<typename... Args>
     void formt_str(std::string& content,const std::string& fmt,Args... args){
         int len_str = std::snprintf(nullptr,0,fmt.c_str(),args...);
@@ -119,6 +125,9 @@ private:
     }
 
 private:
+    // 设置日志输出到标准输出还是日志文件
+    LogFile log_file = LogFile::COUT;
+    // 设置日志文件名
     string m_filename;
     // 输出日志文件指针
     ofstream m_fout;
@@ -126,6 +135,7 @@ private:
     static const char * s_level[LEVEL_COUNT];
     // 单例模式，全局唯一的
     static Logger * m_instance;
+    // 设置日志等级
     Level m_level;
     // 每个日志文件最大存放长度
     int m_row_max;

@@ -22,7 +22,9 @@ Logger::Logger() : m_level(DEBUG),m_row_max(0),m_row(0){
 }
 
 Logger::~Logger(){
-
+    if (log_file == LogFile::LOGFILE) {
+        m_fout.close();
+    }
 }
 
 Logger * Logger::instance(){
@@ -34,12 +36,14 @@ Logger * Logger::instance(){
 
 void Logger::open(const string & filename){
     m_filename = filename;
+    log_file = LogFile::LOGFILE;
     get_row();
     // 以追加的方式打开文件
     m_fout.open(m_filename,ios::app);
     if (m_fout.fail()){
         throw logic_error("open file failed" + m_filename);
     }
+    redirect();
 }
 
 void Logger::get_row(){
@@ -54,9 +58,18 @@ void Logger::get_row(){
     while (std::getline(fin, line)) {
         m_row++;
     }
-
+    fin.close();
 }
-
+void Logger::redirect(){
+    if (log_file != LogFile::LOGFILE) {
+        std::cerr << "redircet log file failed when in COUT mode\n";
+        throw;
+    }
+    std::streambuf* old = std::cout.rdbuf();
+    
+    std::cout.rdbuf(m_fout.rdbuf());
+    
+}
 void Logger::close(){
     m_fout.close();
 }
